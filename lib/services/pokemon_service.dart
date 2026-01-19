@@ -7,6 +7,38 @@ import 'package:movies_app/models/stat.dart';
 class PokemonService {
   static String HOST = 'https://pokeapi.co/api/v2/';
 
+  List<Pokemon> pokemonList = List.empty(growable: true);
+
+  Future<List<Pokemon>> GetAllPokemon() async {
+    String url = HOST + "pokemon?limit=100000&offset=0";
+    Uri uri = Uri.parse(url);
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception("Error buscando Pokémon");
+    }
+
+    Map<String, dynamic> dataJson = jsonDecode(response.body);
+
+    final List<dynamic> results = dataJson["results"] as List<dynamic>;
+
+    List<Pokemon> pokemons = List.empty(growable: true);
+
+    for (final item in results) {
+      final map = item as Map<String, dynamic>;
+      final String name = map["name"].toString();
+
+      pokemons.add(await getPokemonByIdOrName(name));
+    }
+
+    pokemonList = pokemons;
+
+    return pokemons;
+  }
+
+  List<Pokemon> getList() {
+    return pokemonList;
+  }
+
   static Future<List<Pokemon>> get10FirstPokemon() async {
     String url = HOST + "pokemon?limit=10".toString();
     Uri uri = Uri.parse(url);
@@ -33,32 +65,40 @@ class PokemonService {
   }
 
   static Future<Pokemon> getPokemonByIdOrName(String Id) async {
-    String url = HOST + "pokemon/" + Id;
-    Uri uri = Uri.parse(url);
-    final response = await http.get(uri);
+    try {
+      String url = HOST + "pokemon/" + Id;
+      Uri uri = Uri.parse(url);
+      final response = await http.get(uri);
 
-    if (response.statusCode != 200) {
-      throw new Exception("Error buscando Pokémon");
+      if (response.statusCode != 200) {
+        throw new Exception("Error buscando Pokémon");
+      }
+
+      Map<String, dynamic> data = jsonDecode(response.body);
+
+      int id = data["id"];
+      String name = data["name"].toString();
+      String ability = ""; //data["ability"].toString();
+      List<Stat> stats = List.empty(growable: true);
+      List<dynamic> statData = data["stats"];
+      for (final item in statData) {
+        final map = item as Map<String, dynamic>;
+        String name = map["stat"]["name"];
+        int value = map["base_stat"];
+        Stat stat = Stat(name, value);
+        stats.add(stat);
+      }
+
+      String imageUrl = "";
+      if (data["sprites"]["front_default"] != null) {
+        imageUrl = data["sprites"]["front_default"];
+      }
+
+      return Pokemon.all(id, name, ability, [], stats, imageUrl, '');
+    } catch (Exception) {
+      print("ERROR en ID " + Id + " - " + Exception.toString());
     }
-
-    Map<String, dynamic> data = jsonDecode(response.body);
-
-    int id = data["id"];
-    String name = data["name"].toString();
-    String ability = ""; //data["ability"].toString();
-    List<Stat> stats = List.empty(growable: true);
-    List<dynamic> statData = data["stats"];
-    for (final item in statData) {
-      final map = item as Map<String, dynamic>;
-      String name = map["stat"]["name"];
-      int value = map["base_stat"];
-      Stat stat = Stat(name, value);
-      stats.add(stat);
-    }
-
-    String imageUrl = data["sprites"]["front_default"];
-
-    return Pokemon.all(id, name, ability, [], [], stats, imageUrl, '');
+    return Pokemon.empty();
   }
 
   static Future<Pokemon> getRandomPokemon() async {
@@ -91,6 +131,6 @@ class PokemonService {
 
     String imageUrl = data["sprites"]["front_default"];
 
-    return Pokemon.all(id, name, ability, [], [], stats, imageUrl, '');
+    return Pokemon.all(id, name, ability, [], stats, imageUrl, '');
   }
 }

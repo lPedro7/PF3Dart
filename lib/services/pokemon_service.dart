@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:movies_app/models/pokemon.dart';
-import 'package:movies_app/models/stat.dart';
 
 class PokemonService {
   static String HOST = 'https://pokeapi.co/api/v2/';
@@ -158,7 +157,7 @@ class PokemonService {
     //Types
     List<String> types = List.empty(growable: true);
     List<dynamic> typesData = data["types"];
-    for (final item in abilitiesData) {
+    for (final item in typesData) {
       final map = item as Map<String, dynamic>;
       String name = map["type"]["name"];
       types.add(name);
@@ -178,7 +177,6 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
-      print("description = " + url);
       throw new Exception("Error buscando Pokémon");
     }
 

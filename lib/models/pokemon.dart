@@ -1,5 +1,4 @@
-import 'stat.dart';
-
+// Clase Pokémon, con los atributos a trabajar, constructores, y métodos que se usarán en la aplicación
 class Pokemon {
   late int id;
   late String name;

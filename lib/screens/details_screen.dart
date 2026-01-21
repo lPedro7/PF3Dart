@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:movies_app/services/pokemon_service.dart';
-import 'package:movies_app/widgets/widgets.dart';
 import 'package:movies_app/models/pokemon.dart';
 
 class DetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // TODO: Canviar després per una instància de Peli
-    // final String peli =
-    //   ModalRoute.of(context)?.settings.arguments.toString() ?? 'no-movie';
-
-    final Pokemon poke = ModalRoute.of(context)?.settings.arguments as Pokemon;
     return Scaffold(
       body: CustomScrollView(
         slivers: [

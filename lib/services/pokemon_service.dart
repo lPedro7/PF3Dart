@@ -12,12 +12,12 @@ class PokemonService {
   static List<Pokemon> pokemonList = List.empty(growable: true);
 
   Future<List<Pokemon>> GetAllPokemon() async {
-    print("Cargando Pokes !");
-
     String url = HOST + "pokemon?limit=1050&offset=0";
     Uri uri = Uri.parse(url);
     final response = await http.get(uri);
     if (response.statusCode != 200) {
+      print("getAll = " + url);
+
       throw Exception("Error buscando Pokémon");
     }
 
@@ -38,7 +38,6 @@ class PokemonService {
     }
 
     pokemonList = pokemons;
-    print("Pokes cargados !");
     return pokemons;
   }
 
@@ -52,6 +51,8 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
+      print("get10 = " + url);
+
       throw new Exception("Error buscando Pokémon");
     }
 
@@ -74,8 +75,6 @@ class PokemonService {
   List<Pokemon> getPokemonsByQuery(String query) {
     List<Pokemon> pkmns = List.empty(growable: true);
     for (Pokemon p in pokemonList) {
-      print(p.id.toString() + " - " + p.name);
-
       if (p.name.toLowerCase().contains(query.toLowerCase())) pkmns.add(p);
     }
     return pkmns;
@@ -83,7 +82,6 @@ class PokemonService {
 
   Future<Pokemon> getPokemonByIdOrName(String Id) async {
     try {
-      print("Get " + Id);
       String url = HOST + "pokemon/" + Id;
       Uri uri = Uri.parse(url);
       final response = await http.get(uri);
@@ -119,7 +117,8 @@ class PokemonService {
         imageUrl = data["sprites"]["front_default"];
       }
 
-      String description = await getPokemonDescriptionByIdOrName(Id);
+      String description = await getPokemonDescriptionByIdOrName(id.toString());
+
       return Pokemon.all(
           id, name, description, abilities, types, imageUrl, url);
     } catch (Exception) {
@@ -138,6 +137,7 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
+      print("getRandom = " + url);
       throw new Exception("Error buscando Pokémon");
     }
 
@@ -178,6 +178,7 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
+      print("description = " + url);
       throw new Exception("Error buscando Pokémon");
     }
 

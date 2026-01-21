@@ -16,7 +16,7 @@ class Pokemon {
   String abilitiesToString() {
     String res = "";
     for (String s in abilities) {
-      res += "$s/";
+      res += "$s \n";
     }
 
     res = res.substring(0, res.length - 1);
@@ -27,7 +27,7 @@ class Pokemon {
   String typesToString() {
     String res = "";
     for (String s in types) {
-      res += "$s/";
+      res += "$s \n";
     }
 
     res = res.substring(0, res.length - 1);

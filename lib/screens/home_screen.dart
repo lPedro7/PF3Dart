@@ -5,22 +5,19 @@ import 'package:movies_app/widgets/widgets.dart';
 import 'package:movies_app/models/pokemon.dart';
 
 class HomeScreen extends StatefulWidget {
+  final List<Pokemon> pokemons;
+  const HomeScreen({super.key, required this.pokemons});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Pokemon> pokemons = List.empty();
+  late final List<Pokemon> pokemons;
   @override
   void initState() {
     super.initState();
-    loadPokemon();
-  }
-
-  Future<void> loadPokemon() async {
-    pokemons = await PokemonService().GetAllPokemon();
-
-    setState(() => pokemons);
+    pokemons = widget.pokemons;
   }
 
   @override
@@ -35,12 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 showSearch(
                     context: context,
                     delegate: PokemonSearchDelegate(onSearch: (query) async {
-                      return List.empty();
-                    }, onSelected: (pokemon) {
+                      return PokemonService().getPokemonsByQuery(query);
+                    }, onSelected: (pokemon) async {
                       Navigator.pushNamed(
                         context,
                         'details',
-                        arguments: pokemon,
+                        arguments: await PokemonService()
+                            .getPokemonByIdOrName(pokemon.name),
                       );
                     }));
               },
@@ -53,13 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               if (pokemons.isEmpty)
                 const SizedBox(
-                  height: 300,
+                  height: 500,
                   child: Center(child: CircularProgressIndicator()),
                 )
               else
                 CardSwiper(pokes: pokemons), // Slider de pel·licules
 
-              MovieSlider(),
+              //MovieSlider(),
               // Poodeu fer la prova d'afegir-ne uns quants, veureu com cada llista és independent
               // MovieSlider(),
               // MovieSlider(),

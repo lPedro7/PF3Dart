@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movies_app/services/pokemon_service.dart';
 import 'package:movies_app/widgets/widgets.dart';
 import 'package:movies_app/models/pokemon.dart';
 
@@ -10,7 +11,6 @@ class DetailsScreen extends StatelessWidget {
     //   ModalRoute.of(context)?.settings.arguments.toString() ?? 'no-movie';
 
     final Pokemon poke = ModalRoute.of(context)?.settings.arguments as Pokemon;
-
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -20,8 +20,6 @@ class DetailsScreen extends StatelessWidget {
               [
                 _PosterAndTitile(),
                 _Overview(),
-                _Overview(),
-                CastingCards(),
               ],
             ),
           ),
@@ -36,7 +34,6 @@ class _CustomAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Exactament igual que la AppBaer però amb bon comportament davant scroll
     final Pokemon poke = ModalRoute.of(context)?.settings.arguments as Pokemon;
-
     return SliverAppBar(
       backgroundColor: Colors.indigo,
       expandedHeight: 200,
@@ -92,7 +89,7 @@ class _PosterAndTitile extends StatelessWidget {
                 maxLines: 2,
               ),
               Text(
-                'Títol original',
+                'Types : \n ${poke.typesToString()}',
                 style: textTheme.titleMedium,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
@@ -101,7 +98,11 @@ class _PosterAndTitile extends StatelessWidget {
                 children: [
                   const Icon(Icons.star_outline, size: 15, color: Colors.grey),
                   const SizedBox(width: 5),
-                  Text('Nota mitjana', style: textTheme.bodySmall),
+                  Text(
+                    'Habs : \n ${poke.abilitiesToString()}',
+                    style: textTheme.bodySmall,
+                    softWrap: true,
+                  ),
                 ],
               )
             ],
@@ -115,10 +116,12 @@ class _PosterAndTitile extends StatelessWidget {
 class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final Pokemon poke = ModalRoute.of(context)?.settings.arguments as Pokemon;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Text(
-        'Labore eiusmod ad reprehenderit irure eu sunt ex minim. Lorem fugiat Lorem proident duis ea cupidatat. Commodo duis culpa reprehenderit ad elit. Velit duis officia reprehenderit ullamco sint id anim officia est. Enim mollit nisi et exercitation dolore commodo. Cillum mollit laborum non nulla cillum non do reprehenderit Lorem deserunt ex eu sunt do.',
+        poke.description,
         textAlign: TextAlign.justify,
         style: Theme.of(context).textTheme.titleMedium,
       ),

@@ -6,11 +6,15 @@ import 'package:movies_app/models/stat.dart';
 
 class PokemonService {
   static String HOST = 'https://pokeapi.co/api/v2/';
+  static String PHOTOHOST =
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 
-  List<Pokemon> pokemonList = List.empty(growable: true);
+  static List<Pokemon> pokemonList = List.empty(growable: true);
 
   Future<List<Pokemon>> GetAllPokemon() async {
-    String url = HOST + "pokemon?limit=100000&offset=0";
+    print("Cargando Pokes !");
+
+    String url = HOST + "pokemon?limit=1050&offset=0";
     Uri uri = Uri.parse(url);
     final response = await http.get(uri);
     if (response.statusCode != 200) {
@@ -26,12 +30,15 @@ class PokemonService {
     for (final item in results) {
       final map = item as Map<String, dynamic>;
       final String name = map["name"].toString();
-
-      pokemons.add(await getPokemonByIdOrName(name));
+      final String url = map["url"].toString();
+      final List<String> urlSplitt = url.split("/");
+      final String Id = urlSplitt[urlSplitt.length - 2];
+      pokemons.add(
+          Pokemon.basic(int.parse(Id), name, url, PHOTOHOST + Id + ".png"));
     }
 
     pokemonList = pokemons;
-
+    print("Pokes cargados !");
     return pokemons;
   }
 
@@ -39,7 +46,7 @@ class PokemonService {
     return pokemonList;
   }
 
-  static Future<List<Pokemon>> get10FirstPokemon() async {
+  Future<List<Pokemon>> get10FirstPokemon() async {
     String url = HOST + "pokemon?limit=10".toString();
     Uri uri = Uri.parse(url);
     final response = await http.get(uri);
@@ -64,8 +71,19 @@ class PokemonService {
     return pokemons;
   }
 
-  static Future<Pokemon> getPokemonByIdOrName(String Id) async {
+  List<Pokemon> getPokemonsByQuery(String query) {
+    List<Pokemon> pkmns = List.empty(growable: true);
+    for (Pokemon p in pokemonList) {
+      print(p.id.toString() + " - " + p.name);
+
+      if (p.name.toLowerCase().contains(query.toLowerCase())) pkmns.add(p);
+    }
+    return pkmns;
+  }
+
+  Future<Pokemon> getPokemonByIdOrName(String Id) async {
     try {
+      print("Get " + Id);
       String url = HOST + "pokemon/" + Id;
       Uri uri = Uri.parse(url);
       final response = await http.get(uri);
@@ -78,30 +96,39 @@ class PokemonService {
 
       int id = data["id"];
       String name = data["name"].toString();
-      String ability = ""; //data["ability"].toString();
-      List<Stat> stats = List.empty(growable: true);
-      List<dynamic> statData = data["stats"];
-      for (final item in statData) {
+      List<String> abilities = List.empty(growable: true);
+      List<dynamic> abilitiesData = data["abilities"];
+      for (final item in abilitiesData) {
         final map = item as Map<String, dynamic>;
-        String name = map["stat"]["name"];
-        int value = map["base_stat"];
-        Stat stat = Stat(name, value);
-        stats.add(stat);
+        String name = map["ability"]["name"];
+        abilities.add(name);
+      }
+
+      //Types
+      List<String> types = List.empty(growable: true);
+      List<dynamic> typesData = data["types"];
+      for (final item in typesData) {
+        final map = item as Map<String, dynamic>;
+        String name = map["type"]["name"];
+        types.add(name);
       }
 
       String imageUrl = "";
+
       if (data["sprites"]["front_default"] != null) {
         imageUrl = data["sprites"]["front_default"];
       }
 
-      return Pokemon.all(id, name, ability, [], stats, imageUrl, '');
+      String description = await getPokemonDescriptionByIdOrName(Id);
+      return Pokemon.all(
+          id, name, description, abilities, types, imageUrl, url);
     } catch (Exception) {
       print("ERROR en ID " + Id + " - " + Exception.toString());
     }
     return Pokemon.empty();
   }
 
-  static Future<Pokemon> getRandomPokemon() async {
+  Future<Pokemon> getRandomPokemon() async {
     var nPokemon = 1025;
 
     Random random = new Random();
@@ -118,19 +145,54 @@ class PokemonService {
 
     int id = data["id"];
     String name = data["name"].toString();
-    String ability = ""; //data["ability"].toString();
-    List<Stat> stats = List.empty(growable: true);
-    List<dynamic> statData = data["stats"];
-    for (final item in statData) {
+
+    // Abilities
+    List<String> abilities = List.empty(growable: true);
+    List<dynamic> abilitiesData = data["abilities"];
+    for (final item in abilitiesData) {
       final map = item as Map<String, dynamic>;
-      String name = map["stat"]["name"];
-      int value = map["base_stat"];
-      Stat stat = Stat(name, value);
-      stats.add(stat);
+      String name = map["ability"]["name"];
+      abilities.add(name);
     }
 
-    String imageUrl = data["sprites"]["front_default"];
+    //Types
+    List<String> types = List.empty(growable: true);
+    List<dynamic> typesData = data["types"];
+    for (final item in abilitiesData) {
+      final map = item as Map<String, dynamic>;
+      String name = map["type"]["name"];
+      types.add(name);
+    }
 
-    return Pokemon.all(id, name, ability, [], stats, imageUrl, '');
+    // Image
+    String imageUrl = data["sprites"]["front_default"].toString();
+
+    String description = await getPokemonDescriptionByIdOrName(id.toString());
+
+    return Pokemon.all(id, name, description, abilities, types, imageUrl, url);
+  }
+
+  static Future<String> getPokemonDescriptionByIdOrName(String Id) async {
+    String url = HOST + "pokemon-species/" + Id;
+    Uri uri = Uri.parse(url);
+    final response = await http.get(uri);
+
+    if (response.statusCode != 200) {
+      throw new Exception("Error buscando Pokémon");
+    }
+
+    Map<String, dynamic> data = jsonDecode(response.body);
+    List<dynamic> entries = data["flavor_text_entries"];
+    String res = "";
+    for (final entry in entries) {
+      final item = entry as Map<String, dynamic>;
+      String language = item["language"]["name"];
+      if (language == "es") res = item["flavor_text"].toString();
+      if (language != "en") continue;
+
+      return item["flavor_text"].toString();
+    }
+
+    return res;
   }
 }

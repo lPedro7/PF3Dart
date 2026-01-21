@@ -14,17 +14,18 @@ class CardSwiper extends StatelessWidget {
     return Container(
         width: double.infinity,
         // Aquest multiplicador estableix el tant per cent de pantalla ocupada 50%
-        height: size.height * 0.5,
+        height: size.height * 0.8,
         // color: Colors.red,
         child: Swiper(
-          itemCount: 10,
+          itemCount: 1000,
           layout: SwiperLayout.STACK,
           itemWidth: size.width, // * 0.6,
           itemHeight: size.height * 0.4,
           itemBuilder: (BuildContext context, int index) {
             return GestureDetector(
-              onTap: () => Navigator.pushNamed(context, 'details',
-                  arguments: pokes[index]),
+              onTap: () async => Navigator.pushNamed(context, 'details',
+                  arguments: await PokemonService()
+                      .getPokemonByIdOrName(pokes[index].name)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: FadeInImage(

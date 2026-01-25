@@ -15,8 +15,6 @@ class PokemonService {
     Uri uri = Uri.parse(url);
     final response = await http.get(uri);
     if (response.statusCode != 200) {
-      print("getAll = " + url);
-
       throw Exception("Error buscando Pokémon");
     }
 
@@ -50,8 +48,6 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
-      print("get10 = " + url);
-
       throw new Exception("Error buscando Pokémon");
     }
 
@@ -116,8 +112,14 @@ class PokemonService {
         imageUrl = data["sprites"]["front_default"];
       }
 
-      String description = await getPokemonDescriptionByIdOrName(id.toString());
+      String description = "No information available";
 
+      if (data["species"].toString().isNotEmpty) {
+        if (data["species"]["url"].toString().isNotEmpty) {
+          description = await getPokemonDescriptionByUrl(
+              data["species"]["url"].toString());
+        }
+      }
       return Pokemon.all(
           id, name, description, abilities, types, imageUrl, url);
     } catch (Exception) {
@@ -136,7 +138,6 @@ class PokemonService {
     final response = await http.get(uri);
 
     if (response.statusCode != 200) {
-      print("getRandom = " + url);
       throw new Exception("Error buscando Pokémon");
     }
 
@@ -166,32 +167,69 @@ class PokemonService {
     // Image
     String imageUrl = data["sprites"]["front_default"].toString();
 
-    String description = await getPokemonDescriptionByIdOrName(id.toString());
+    String description = "No information available";
+
+    if (data["species"].toString().isNotEmpty) {
+      if (data["url"].toString().isNotEmpty) {
+        description = await getPokemonDescriptionByUrl(data["url"].toString());
+      }
+    }
 
     return Pokemon.all(id, name, description, abilities, types, imageUrl, url);
   }
 
   static Future<String> getPokemonDescriptionByIdOrName(String Id) async {
-    String url = HOST + "pokemon-species/" + Id;
-    Uri uri = Uri.parse(url);
-    final response = await http.get(uri);
+    try {
+      String url = HOST + "pokemon-species/" + Id;
+      Uri uri = Uri.parse(url);
+      final response = await http.get(uri);
 
-    if (response.statusCode != 200) {
-      throw new Exception("Error buscando Pokémon");
+      if (response.statusCode != 200) {
+        throw new Exception("No information available");
+      }
+
+      Map<String, dynamic> data = jsonDecode(response.body);
+      List<dynamic> entries = data["flavor_text_entries"];
+      String res = "";
+      for (final entry in entries) {
+        final item = entry as Map<String, dynamic>;
+        String language = item["language"]["name"];
+        if (language == "es") res = item["flavor_text"].toString();
+        if (language != "en") continue;
+
+        return item["flavor_text"].toString();
+      }
+
+      return res;
+    } catch (Exception) {
+      return "No information available";
     }
+  }
 
-    Map<String, dynamic> data = jsonDecode(response.body);
-    List<dynamic> entries = data["flavor_text_entries"];
-    String res = "";
-    for (final entry in entries) {
-      final item = entry as Map<String, dynamic>;
-      String language = item["language"]["name"];
-      if (language == "es") res = item["flavor_text"].toString();
-      if (language != "en") continue;
+  static Future<String> getPokemonDescriptionByUrl(String url) async {
+    try {
+      Uri uri = Uri.parse(url);
+      final response = await http.get(uri);
 
-      return item["flavor_text"].toString();
+      if (response.statusCode != 200) {
+        throw new Exception("No information available");
+      }
+
+      Map<String, dynamic> data = jsonDecode(response.body);
+      List<dynamic> entries = data["flavor_text_entries"];
+      String res = "";
+      for (final entry in entries) {
+        final item = entry as Map<String, dynamic>;
+        String language = item["language"]["name"];
+        if (language == "es") res = item["flavor_text"].toString();
+        if (language != "en") continue;
+
+        return item["flavor_text"].toString();
+      }
+
+      return res;
+    } catch (Exception) {
+      return "No information available";
     }
-
-    return res;
   }
 }

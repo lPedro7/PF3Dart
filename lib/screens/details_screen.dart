@@ -110,7 +110,6 @@ class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Pokemon poke = ModalRoute.of(context)?.settings.arguments as Pokemon;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Text(
